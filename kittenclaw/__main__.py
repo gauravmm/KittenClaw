@@ -1,4 +1,4 @@
-"""kittenclaw — the harness.
+"""kittenclaw - the harness.
 
 End-to-end runtime in one file. The control flow you want to understand is
 `turn_loop` near the bottom; everything above it is supporting machinery
@@ -12,9 +12,9 @@ caching gets a hit on every call after the first:
 
 * The system prompt is rendered ONCE, when the conversation file is created,
   and written as the first JSONL line. Subsequent turns read it from disk
-  verbatim — they never re-render. Editing `system.md.j2` or adding skills
+  verbatim - they never re-render. Editing `system.md.j2` or adding skills
   affects *new* conversations only.
-* Skill *bodies* are not in the system prompt — only their frontmatter
+* Skill *bodies* are not in the system prompt - only their frontmatter
   blurbs are. The model loads a skill body on demand via
   `file_read("skills/<name>.md")`, which appears later in the message list
   (after the prefix) and so does not invalidate it.
@@ -23,7 +23,7 @@ caching gets a hit on every call after the first:
 
 After every model call we print one line of cache telemetry to stderr (the
 provider's reported numbers, parsed from `response.usage`). Watch the
-`cached=` field grow as a conversation progresses — that's prefix caching
+`cached=` field grow as a conversation progresses - that's prefix caching
 actually working.
 """
 
@@ -71,7 +71,7 @@ _VAR_RE = re.compile(r"\$\{([A-Z_][A-Z0-9_]*)\}")
 
 def _interpolate(value: Any) -> Any:
     """Walk the parsed TOML and substitute `${VAR}` references with their
-    environment value. Unset vars raise — fail fast, no silent fallbacks."""
+    environment value. Unset vars raise - fail fast, no silent fallbacks."""
     if isinstance(value, dict):
         return {k: _interpolate(v) for k, v in value.items()}
     if isinstance(value, list):
@@ -97,7 +97,7 @@ def load_config(preset_name: str | None = None) -> dict:
     name = preset_name or cfg["default_preset"]
     if name not in cfg.get("models", {}):
         raise SystemExit(
-            f"preset {name!r} not found in kittenclaw.toml — "
+            f"preset {name!r} not found in kittenclaw.toml - "
             f"available: {list(cfg.get('models', {}))}"
         )
     preset = dict(cfg["models"][name])
@@ -188,7 +188,7 @@ def active_conversation_path(chat_id: int) -> Path | None:
 
 
 def has_ever_greeted(chat_id: int) -> bool:
-    """True iff we have any record (active or archived) of this chat — used
+    """True iff we have any record (active or archived) of this chat - used
     by the Telegram bot to decide whether to send the first-contact
     disclaimer. The filesystem *is* the greeted-users state."""
     return bool(_scan_serials(chat_id))
@@ -216,7 +216,7 @@ def read_messages(path: Path) -> list[dict]:
 
 def append_message(path: Path, msg: dict) -> None:
     """Append a single message to the conversation file. One JSON object,
-    terminated by `\\n` — the unit of atomicity."""
+    terminated by `\\n` - the unit of atomicity."""
     with jsonlines.open(path, mode="a") as w:
         w.write(msg)
 
@@ -243,7 +243,7 @@ def make_client(preset: dict) -> AsyncOpenAI:
 def _log_usage(chat_id: int, turn: int, usage: Any) -> int:
     """Print the one-line cache-telemetry summary; return prompt_tokens (the
     caller uses it for the auto-clear budget check). Reads `response.usage`
-    directly — no tokenizer dependency. `cached=?` means the provider didn't
+    directly - no tokenizer dependency. `cached=?` means the provider didn't
     report cached_tokens at all; `cached=0` means they did and it was zero."""
     if usage is None:
         log.info("[chat %s] turn %d  (no usage block returned)", chat_id, turn)
@@ -287,7 +287,7 @@ async def call_model(
 
 
 # ---------------------------------------------------------------------------
-# The turn loop — the heart of the harness
+# The turn loop - the heart of the harness
 # ---------------------------------------------------------------------------
 
 
@@ -306,7 +306,7 @@ async def turn_loop(
 
     Returns `(reply_text, auto_cleared)`. `auto_cleared=True` means the
     response pushed us past `max_context_tokens` and the conversation file
-    has been archived — caller should warn the user.
+    has been archived - caller should warn the user.
     """
     messages = read_messages(path)
 

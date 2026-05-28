@@ -25,16 +25,16 @@ from . import __main__ as harness  # ROOT, STICKER_PATH, paths, turn_loop, ...
 
 log = logging.getLogger("kittenclaw.tg")
 
-# Inline disclaimer — short enough that an external file would be ceremony,
+# Inline disclaimer - short enough that an external file would be ceremony,
 # and keeping it next to the handler makes the teaching obvious.
 DISCLAIMER = (
     "👋 Welcome to kittenclaw!\n\n"
     "I'm a tiny teaching bot. I can read & write files in my workspace and "
     "fetch pages from the web. I have no memory of other users, no "
-    "moderation, and no guarantees — assume anything I say can be wrong.\n\n"
+    "moderation, and no guarantees - assume anything I say can be wrong.\n\n"
     "Commands:\n"
-    "/clear — archive this conversation and start fresh\n"
-    "/disclaimer — re-show this message"
+    "/clear - archive this conversation and start fresh\n"
+    "/disclaimer - re-show this message"
 )
 
 # Telegram's per-message limit is 4096 chars. Leave headroom for markdown
@@ -68,7 +68,7 @@ async def _send_disclaimer(update: Update) -> None:
         with open(harness.STICKER_PATH, "rb") as f:
             await chat.send_sticker(f)
     except FileNotFoundError:
-        log.warning("sticker missing at %s — skipping", harness.STICKER_PATH)
+        log.warning("sticker missing at %s - skipping", harness.STICKER_PATH)
     await chat.send_message(DISCLAIMER)
 
 
@@ -90,12 +90,12 @@ async def _reply(update: Update, text: str) -> None:
 
 
 async def on_disclaimer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/disclaimer — re-show the welcome message. Does not alter state."""
+    """/disclaimer - re-show the welcome message. Does not alter state."""
     await _send_disclaimer(update)
 
 
 async def on_clear(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/clear — archive the current conversation. The *next* user message
+    """/clear - archive the current conversation. The *next* user message
     starts a fresh file with serial+1 and re-renders the system prompt
     against the current skill set."""
     chat = update.effective_chat
@@ -107,7 +107,7 @@ async def on_clear(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             harness.archive(path)
             await chat.send_message("✨ Conversation cleared. Send a message to start a new one.")
         else:
-            await chat.send_message("(nothing to clear — no active conversation)")
+            await chat.send_message("(nothing to clear - no active conversation)")
 
 
 async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -144,7 +144,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         except Exception:
             log.exception("[chat %s] turn loop failed", chat.id)
             await chat.send_message(
-                "⚠️ Internal error — check the terminal for a traceback."
+                "⚠️ Internal error - check the terminal for a traceback."
             )
             return
 

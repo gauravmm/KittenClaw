@@ -5,7 +5,7 @@ its Python implementation.
 
 The dispatcher catches *all* exceptions from tool calls and returns them as
 `{"error": "<ExceptionClass>: <message>"}`. The model gets the error as a
-normal `tool` message and decides how to respond — no exception ever
+normal `tool` message and decides how to respond - no exception ever
 propagates out of a single tool call, so the turn loop stays alive.
 """
 
@@ -18,7 +18,7 @@ from urllib.parse import quote_plus
 import httpx
 from bs4 import BeautifulSoup
 
-# Workspace root — every file tool resolves paths relative to this directory
+# Workspace root - every file tool resolves paths relative to this directory
 # and refuses paths that escape it. Resolved once at import so symlink games
 # can't shift the boundary at call time.
 WORKSPACE = (Path(__file__).resolve().parent.parent / "workspace").resolve()
@@ -32,7 +32,7 @@ WORKSPACE = (Path(__file__).resolve().parent.parent / "workspace").resolve()
 def _safe_path(relpath: str) -> Path:
     """Resolve `relpath` under `WORKSPACE` and reject anything that escapes
     or touches a dotfile/dotdir. Used by every file tool *and* the skill
-    loader — one helper, one rule.
+    loader - one helper, one rule.
 
     Hidden entries (any component starting with `.`) are off-limits: this
     protects repo plumbing like `.gitkeep` and keeps the model's mental
@@ -42,7 +42,7 @@ def _safe_path(relpath: str) -> Path:
     # `is_relative_to` was added in 3.9; we're on 3.14.
     if not p.is_relative_to(WORKSPACE):
         raise ValueError(f"path escapes workspace: {relpath!r}")
-    # Check every component *under* WORKSPACE — not the workspace dir itself.
+    # Check every component *under* WORKSPACE - not the workspace dir itself.
     rel = p.relative_to(WORKSPACE)
     for part in rel.parts:
         if part.startswith("."):
@@ -51,7 +51,7 @@ def _safe_path(relpath: str) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Web tools (async — they do real network I/O on the event loop)
+# Web tools (async - they do real network I/O on the event loop)
 # ---------------------------------------------------------------------------
 
 
@@ -70,7 +70,7 @@ async def web_fetch(url: str, as_text: bool = True) -> str:
 async def web_search(query: str) -> list[dict]:
     """Scrape DuckDuckGo's HTML endpoint for `query`. Returns a list of
     {title, url, snippet}. Expected to break periodically as DDG changes
-    their markup — fixing the selector is a great student exercise."""
+    their markup - fixing the selector is a great student exercise."""
     url = f"https://html.duckduckgo.com/html/?q={quote_plus(query)}"
     async with httpx.AsyncClient(follow_redirects=True, timeout=20.0) as client:
         # DDG's HTML endpoint rejects requests without a browser-y UA.
@@ -96,7 +96,7 @@ async def web_search(query: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# File tools (sync — workspace files are local and tiny; see SPEC.md on why
+# File tools (sync - workspace files are local and tiny; see SPEC.md on why
 # we don't wrap them in asyncio.to_thread)
 # ---------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ def file_list(path: str = "") -> list[str]:
     d = _safe_path(path) if path else WORKSPACE
     if not d.is_dir():
         raise NotADirectoryError(f"{path!r} is not a directory")
-    # Mark directories with a trailing slash — saves the model a round-trip.
+    # Mark directories with a trailing slash - saves the model a round-trip.
     out = []
     for entry in sorted(d.iterdir()):
         if entry.name.startswith("."):
@@ -132,7 +132,7 @@ def file_write(path: str, content: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# JSON Schemas — passed to the model via chat.completions.create(tools=[...]).
+# JSON Schemas - passed to the model via chat.completions.create(tools=[...]).
 # These are *not* interpolated into the system prompt; the system prompt
 # describes when to use each tool in prose.
 # ---------------------------------------------------------------------------
@@ -149,7 +149,7 @@ TOOL_SCHEMAS = [
                     "url": {"type": "string", "description": "URL to fetch."},
                     "as_text": {
                         "type": "boolean",
-                        "description": "If true (default), strip HTML to plain text. If false, return the raw body — useful for JSON APIs, RSS, robots.txt, etc.",
+                        "description": "If true (default), strip HTML to plain text. If false, return the raw body - useful for JSON APIs, RSS, robots.txt, etc.",
                         "default": True,
                     },
                 },

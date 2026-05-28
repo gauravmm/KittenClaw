@@ -15,7 +15,7 @@ The whole runtime is three Python files:
 ## Quickstart (Codespaces)
 
 1. **Fork** this repo on GitHub.
-2. **Open in Codespace** — the devcontainer installs Python 3.14 + uv,
+2. **Open in Codespace** - the devcontainer installs Python 3.14 + uv,
    runs `uv sync`, and copies `.env.example` → `.env`.
 3. **Get a Telegram bot token** from [@BotFather](https://t.me/BotFather) on
    Telegram. Paste it into `.env` as `TELEGRAM_BOT_TOKEN=...`.
@@ -30,7 +30,7 @@ The whole runtime is three Python files:
    Then DM your bot on Telegram. The first message gets the kittenclaw logo
    + a disclaimer; subsequent messages run through the model.
 
-That's it. No port forwarding, no public URL — long polling makes only
+That's it. No port forwarding, no public URL - long polling makes only
 outbound connections, so Codespaces is fine.
 
 ## Local install
@@ -52,9 +52,9 @@ You'll need [`uv`](https://github.com/astral-sh/uv) installed. uv picks up
 kittenclaw [--preset <name>] [--verbose]
 ```
 
-- `--preset <name>` — pick a preset from `kittenclaw.toml`. Defaults to
+- `--preset <name>` - pick a preset from `kittenclaw.toml`. Defaults to
   `default_preset` (currently `openrouter-free`).
-- `--verbose` — emit per-tool-call debug logging on top of the default
+- `--verbose` - emit per-tool-call debug logging on top of the default
   one-line-per-turn cache telemetry.
 
 Everything else (`base_url`, `model`, token budgets, API key) comes from
@@ -68,9 +68,9 @@ After every model call, one line:
 [chat 12345] turn 4  prompt=2843 (cached=2611, 91.8%)  completion=72  total=2915
 ```
 
-Watch the `cached=` field grow as a conversation goes on — that's prefix
+Watch the `cached=` field grow as a conversation goes on - that's prefix
 caching actually working. `cached=?` means the provider didn't report
-cached_tokens at all (e.g., Anthropic via OpenRouter — see [SPEC.md](SPEC.md)
+cached_tokens at all (e.g., Anthropic via OpenRouter - see [SPEC.md](SPEC.md)
 for why). `cached=0` means they reported it and it was zero.
 
 ## Files & directories
@@ -80,7 +80,7 @@ for why). `cached=0` means they reported it and it was zero.
 | `kittenclaw.toml`          | model presets (edit to add/select)             |
 | `system.md.j2`             | Jinja2 system-prompt template                  |
 | `workspace/`               | the model's sandbox (`file_*` tools live here) |
-| `workspace/skills/*.md`    | skills — frontmatter is injected into prompt   |
+| `workspace/skills/*.md`    | skills - frontmatter is injected into prompt   |
 | `workspace/memory/*.md`    | conventional cross-conversation memory         |
 | `conversations/*.jsonl`    | active conversations (one per Telegram chat)   |
 | `conversations/archive/`   | archived conversations after `/clear`          |
@@ -88,9 +88,9 @@ for why). `cached=0` means they reported it and it was zero.
 
 ## Commands
 
-- `/clear` — archive the current conversation; the next message starts
+- `/clear` - archive the current conversation; the next message starts
   fresh with a re-rendered system prompt.
-- `/disclaimer` — re-show the welcome message.
+- `/disclaimer` - re-show the welcome message.
 
 ## Reading conversation files
 
@@ -119,9 +119,9 @@ Things students can do without touching code:
 
 Things that need code (and are kept short on purpose):
 
-- A new tool — add a function + schema to `kittenclaw/tools.py`, wire it
+- A new tool - add a function + schema to `kittenclaw/tools.py`, wire it
   into `_HANDLERS`.
-- A new command — add a `CommandHandler` in `kittenclaw/telegram_bot.py`.
+- A new command - add a `CommandHandler` in `kittenclaw/telegram_bot.py`.
 
 ## Updating the sticker
 

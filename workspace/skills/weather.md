@@ -21,14 +21,14 @@ uses `workspace/memory/location.md`.
 
 ## Fetching the weather
 
-Call `web_fetch("https://wttr.in/<city>,<country>?format=4")` — returns a
+Call `web_fetch("https://wttr.in/<city>,<country>?format=4")` - returns a
 single-line summary like `wellington,nz: ☀️ 🌡️+11°C 🌬️↖14km/h`. Plain text,
 so the default `as_text=true` is fine.
 
 Alternatives if you need a different shape:
 
-- `format=3` — even shorter, just the city + temperature.
-- `format=j1` — full JSON with hourly forecasts.
+- `format=3` - even shorter, just the city + temperature.
+- `format=j1` - full JSON with hourly forecasts.
 
 ## Replying
 

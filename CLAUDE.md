@@ -2,13 +2,13 @@
 
 Guidance for Claude Code (and other LLM coding assistants) working in this
 repository. Humans should read [SPEC.md](SPEC.md) and [README.md](README.md)
-first — this file assumes you've read both.
+first - this file assumes you've read both.
 
 ## What this project is
 
 A **teaching harness**. The audience is students reading the code in one
 sitting to learn how agentic chat loops work. Optimizing for readability,
-brevity, and a small surface area is not a stylistic preference here — it
+brevity, and a small surface area is not a stylistic preference here - it
 is the primary requirement.
 
 ## Code style rules
@@ -27,8 +27,12 @@ is the primary requirement.
 - **Comments should explain *why*.** Don't paraphrase the code. Especially
   worth commenting: cache-friendliness decisions, path-safety invariants,
   and anywhere the spec explicitly says "do it this way".
+- **Hyphens only - no en-dashes or em-dashes.** Use the plain ASCII hyphen
+  (`-`) everywhere: prose, comments, docstrings, user-facing strings. Do not
+  use `U+2013` (en-dash) or `U+2014` (em-dash). This applies to all files in
+  the repo, not just code.
 
-## Things that are load-bearing — do not "clean up"
+## Things that are load-bearing - do not "clean up"
 
 - **The system prompt is rendered once, when the conversation file is
   created.** It is *not* re-rendered on subsequent turns. This is what
@@ -36,7 +40,7 @@ is the primary requirement.
   call inside `turn_loop`, stop.
 - **Skills inject only their frontmatter into the system prompt.** The body
   is loaded by the model calling `file_read("skills/<name>.md")`. Do not
-  inline the body into the prompt — it would blow up the prefix and
+  inline the body into the prompt - it would blow up the prefix and
   invalidate the cache.
 - **`extra_body={"usage": {"include": True}}`** on every model call. This
   is what makes OpenRouter expand the usage block so cache telemetry works
@@ -60,7 +64,7 @@ is the primary requirement.
 
 ## Spec is authoritative
 
-If something in the code seems wrong, check `SPEC.md` first — most of the
+If something in the code seems wrong, check `SPEC.md` first - most of the
 non-obvious choices are explained there with a teaching motivation. If
 spec and code disagree, ask the user which is right before "fixing" either.
 
@@ -82,7 +86,7 @@ that's the signal it does *not* belong here.
 ## Permissions / running things
 
 - `uv run python -m kittenclaw` launches the bot. Don't run this yourself
-  unattended — it requires a Telegram bot token and will start polling.
+  unattended - it requires a Telegram bot token and will start polling.
 - `uv sync` is safe to run.
 - Conversation files under `conversations/*.jsonl` are runtime artifacts.
   Do not commit them; the `.gitignore` already excludes them.
@@ -93,7 +97,7 @@ that's the signal it does *not* belong here.
    `description`) and a markdown body of instructions.
 2. The filename (sans `.md`) is canonical; `name:` in frontmatter must
    match if present.
-3. *Do not* edit the system prompt template to mention the skill — the
+3. *Do not* edit the system prompt template to mention the skill - the
    frontmatter loop in `system.md.j2` already lists it.
 4. Existing conversations will not see the new skill until they `/clear`.
    This is intentional; mention it to the user if relevant.
