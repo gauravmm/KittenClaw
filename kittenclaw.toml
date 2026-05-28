@@ -1,0 +1,26 @@
+# Which preset to use if --preset isn't passed on the CLI.
+default_preset = "openrouter-free"
+
+# Default. OpenRouter's catch-all `openrouter/free` router picks a free model
+# at random and filters for tool-calling support per request. Free signup at
+# openrouter.ai gives the key; no model pinning needed.
+[models.openrouter-free]
+base_url = "https://openrouter.ai/api/v1"
+model = "openrouter/free"
+max_context_tokens = 24000
+max_response_tokens = 4096
+api_key = "${OPENROUTER_API_KEY}"
+
+[models.openrouter-gemma-4-31b]
+base_url = "https://openrouter.ai/api/v1"
+model = "google/gemma-4-31b-it:free"
+max_context_tokens = 24000
+max_response_tokens = 4096
+api_key = "${OPENROUTER_API_KEY}"
+
+[models.local-vllm]
+base_url = "http://localhost:8000/v1"
+model = "Qwen/Qwen2.5-7B-Instruct"
+max_context_tokens = 24000
+max_response_tokens = 2048
+api_key = "not-needed"
