@@ -149,8 +149,17 @@ def load_skills() -> list[dict]:
 
 
 def render_system_prompt() -> str:
-    """Render `system.md.j2` against the current skill frontmatter set."""
-    tmpl = Template(SYSTEM_TEMPLATE_PATH.read_text(encoding="utf-8"))
+    """Render `system.md.j2` against the current skill frontmatter set.
+
+    `trim_blocks`/`lstrip_blocks` strip the newline after a `{% %}` tag and
+    leading whitespace before it, so the `{% if %}`/`{% for %}` scaffolding
+    doesn't leave doubled blank lines in the rendered prompt. A clean prompt
+    is the point of this harness, and it keeps the cache prefix tight."""
+    tmpl = Template(
+        SYSTEM_TEMPLATE_PATH.read_text(encoding="utf-8"),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
     return tmpl.render(skills=load_skills())
 
 
