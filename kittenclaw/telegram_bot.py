@@ -161,9 +161,24 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 # ---------------------------------------------------------------------------
 
 
+async def _set_commands(app: Application) -> None:
+    """Push the command menu to Telegram so the client's "/" list matches the
+    handlers below. Telegram caches the last-registered list server-side, so
+    without this a renamed or removed command lingers in the menu until
+    someone clears it by hand. Keep these in sync with the CommandHandlers."""
+    await app.bot.set_my_commands(
+        [
+            ("clear", "Archive this conversation and start fresh"),
+            ("disclaimer", "Re-show the welcome message"),
+        ]
+    )
+
+
 def run_bot(token: str, preset: dict) -> None:
     """Build the PTB Application, wire handlers, and run long polling."""
-    app = Application.builder().token(token).build()
+    # post_init runs once after the bot is initialised but before polling, so
+    # the menu is refreshed on every startup.
+    app = Application.builder().token(token).post_init(_set_commands).build()
 
     # Per-chat locks. defaultdict means we get a fresh asyncio.Lock the
     # first time a chat ID is touched, no upfront registration.
