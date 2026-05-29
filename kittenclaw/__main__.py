@@ -2,7 +2,7 @@
 
 End-to-end runtime in one file. The control flow you want to understand is
 `turn_loop` near the bottom; everything above it is supporting machinery
-(config loading, system-prompt rendering, JSONL I/O, cache telemetry).
+(config loading, system-prompt rendering, JSONL I/O, usage logging).
 
 Cache notes for the curious student
 -----------------------------------
@@ -21,15 +21,15 @@ caching gets a hit on every call after the first:
 * Tool results are deterministic in shape (they are whatever the tool
   returned). They append to the message list, never mutate prior lines.
 
-After every model call we print one line of cache telemetry to stderr (the
-provider's reported numbers, parsed from `response.usage`). Watch the
-`cached=` field grow as a conversation progresses - that's prefix caching
-actually working.
+This file keeps the prefix cache-friendly but does not *measure* caching -
+we log only the provider's raw prompt/completion/total token counts from
+`response.usage`. Reading cache-hit telemetry is taught separately.
 """
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import logging
 import os
 import re
@@ -239,7 +239,7 @@ def archive(path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Model client + cache telemetry
+# Model client + usage logging
 # ---------------------------------------------------------------------------
 
 
@@ -250,28 +250,18 @@ def make_client(preset: dict) -> AsyncOpenAI:
 
 
 def _log_usage(chat_id: int, turn: int, usage: Any) -> int:
-    """Print the one-line cache-telemetry summary; return prompt_tokens (the
-    caller uses it for the auto-clear budget check). Reads `response.usage`
-    directly - no tokenizer dependency. `cached=?` means the provider didn't
-    report cached_tokens at all; `cached=0` means they did and it was zero."""
+    """Print the one-line token summary; return prompt_tokens (the caller uses
+    it for the auto-clear budget check). Reads `response.usage` directly - no
+    tokenizer dependency."""
     if usage is None:
         log.info("[chat %s] turn %d  (no usage block returned)", chat_id, turn)
         return 0
     pt = getattr(usage, "prompt_tokens", 0) or 0
     ct = getattr(usage, "completion_tokens", 0) or 0
     tt = getattr(usage, "total_tokens", 0) or 0
-    # OpenAI-style: usage.prompt_tokens_details.cached_tokens. Anthropic's
-    # distinct fields are intentionally unsupported (see SPEC.md).
-    details = getattr(usage, "prompt_tokens_details", None)
-    cached = getattr(details, "cached_tokens", None) if details else None
-    if cached is None:
-        cached_str = "cached=?"
-    else:
-        pct = (cached / pt * 100) if pt else 0.0
-        cached_str = f"cached={cached}, {pct:.1f}%"
     log.info(
-        "[chat %s] turn %d  prompt=%d (%s)  completion=%d  total=%d",
-        chat_id, turn, pt, cached_str, ct, tt,
+        "[chat %s] turn %d  prompt=%d  completion=%d  total=%d",
+        chat_id, turn, pt, ct, tt,
     )
     return pt
 
@@ -281,8 +271,7 @@ async def call_model(
     preset: dict,
     messages: list[dict],
 ) -> Any:
-    """One model call. Always sends `usage.include=true` via extra_body so
-    OpenRouter expands the usage block (a no-op for other providers)."""
+    """One model call against the OpenAI-compatible chat-completions API."""
     return await client.chat.completions.create(
         model=preset["model"],
         messages=messages,
@@ -291,7 +280,6 @@ async def call_model(
         # REVIEW: assuming the SDK ≥1.40 path (max_tokens auto-routed to
         # max_completion_tokens for o-series). If a student hits a rejection
         # on a strict proxy, rename to `max_completion_tokens=` here.
-        extra_body={"usage": {"include": True}},
     )
 
 
@@ -389,6 +377,11 @@ def main() -> None:
     parser.add_argument(
         "--verbose", action="store_true", help="per-tool-call debug logging"
     )
+    parser.add_argument(
+        "--once",
+        metavar="MESSAGE",
+        help="process one message locally and exit, no Telegram (for debugging)",
+    )
     args = parser.parse_args()
 
     load_dotenv(ROOT / ".env")
@@ -399,7 +392,7 @@ def main() -> None:
     )
     # httpx logs one INFO line per request ("HTTP Request: POST ... 200 OK").
     # Every model call and web_fetch goes through it, which drowns out our
-    # one-line-per-turn cache telemetry. Mute it to WARNING; --verbose can't
+    # one-line-per-turn token summary. Mute it to WARNING; --verbose can't
     # bring it back, which is the point.
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
@@ -408,6 +401,26 @@ def main() -> None:
         "preset=%s model=%s base_url=%s",
         preset["_name"], preset["model"], preset["base_url"],
     )
+
+    # --once drives a single turn through the same turn_loop the bot uses,
+    # then exits - no Telegram token, no polling. Repeated calls reuse one
+    # synthetic chat_id so the conversation file continues across them; the
+    # rendered reply goes to stdout while logging stays on stderr.
+    if args.once is not None:
+        client = make_client(preset)
+        chat_id = 0  # debug chat; delete conversations/0-*.jsonl to start over
+        path = active_conversation_path(chat_id) or new_conversation(chat_id)
+        reply, cleared = asyncio.run(
+            turn_loop(
+                client=client,
+                preset=preset,
+                chat_id=chat_id,
+                path=path,
+                user_text=args.once,
+            )
+        )
+        print(reply + ("\n[auto-cleared]" if cleared else ""))
+        return
 
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not token:

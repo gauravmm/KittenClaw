@@ -358,49 +358,24 @@ has been ended via `/clear`. The harness never deletes a conversation -
 moving to the archive folder *is* "completion." Students can grep across the
 archive to review prior runs, which is half the educational point.
 
-## Cache telemetry
+## Usage logging
 
 The system prompt is persisted (not re-rendered) per conversation, skills load
 on demand after the prefix, and tool results are deterministic - so the prefix
-caches by construction. A comment block at the top of `__main__.py` calls
-this out for students.
+caches by construction. A comment block at the top of `__main__.py` calls this
+out for students.
 
-After every model call, the loop **reports the provider's cache stats to the
-standard log stream**. This is one of the core things the harness is meant to
-teach: prompt caching is real, observable, and worth designing around. It is
-*not* exposed to Telegram - students read it in the terminal alongside the
-rest of the harness's logs.
-
-The model client parses the `usage` block of the response and emits a one-line
-summary per turn:
+After every model call, the loop reads the **OpenAI-style** `usage` block from
+the response (`prompt_tokens`, `completion_tokens`, `total_tokens` - no
+tokenizer dependency) and emits a one-line summary per turn to the log stream:
 
 ```
-[chat 12345] turn 4   prompt=2843 (cached=2611, 91.8%)  completion=72  total=2915
+[chat 12345] turn 4   prompt=2843  completion=72  total=2915
 ```
 
-We only support the **OpenAI-style** `usage` shape:
-
-- `prompt_tokens`, `completion_tokens`, `total_tokens` - always present.
-- `prompt_tokens_details.cached_tokens` - present when the provider reports
-  cache hits. Hit ratio = `cached_tokens / prompt_tokens`.
-
-This shape is returned by OpenAI directly, by vLLM with `--enable-prefix-caching`,
-and by OpenRouter when routing to OpenAI / DeepSeek / Gemini. Anthropic's
-distinct `cache_read_input_tokens` / `cache_creation_input_tokens` fields are
-**not** supported - students using Anthropic-via-OpenRouter will see `cached=?`,
-and that's a deliberate teaching artifact rather than a feature to add.
-
-**OpenRouter note**: it supports cache reporting, but you must send
-`"usage": {"include": true}` in the request body - OpenRouter omits the
-expanded usage block by default. With the openai SDK, this is passed via
-`extra_body={"usage": {"include": True}}` on the `chat.completions.create`
-call. The model client always includes it.
-
-When `prompt_tokens_details.cached_tokens` is absent from the response, the
-reporter logs `cached=?` rather than guessing. A `cached=0` line means the
-provider reported the field but zero hits - informative on its own: the prefix
-may be too short, this may be the first request, or the cache TTL (typically
-5-10 minutes idle) may have expired.
+It is *not* exposed to Telegram - students read it in the terminal alongside
+the rest of the harness's logs. `prompt_tokens` also feeds the auto-clear
+budget check (see below).
 
 ## Configuration
 
@@ -537,7 +512,7 @@ in-conversation would break the cache and confuse students about what the
 model saw; clearing is honest about the state change.
 
 The same one-line log entry as before is still emitted on every turn
-(prompt/cached/completion/total). When the auto-clear fires, an additional
+(prompt/completion/total). When the auto-clear fires, an additional
 log line marks it:
 
 ```
@@ -593,7 +568,7 @@ runs on the selected preset.
 
 - `openai` - model client, used in OpenAI-compatible mode (see above). The
   SDK uses `httpx` under the hood and exposes `response.usage` as a Pydantic
-  object that we read directly for cache telemetry.
+  object that we read directly for the per-turn token summary.
 - `python-telegram-bot` - Telegram client. Idiomatic handlers, long-polling.
   Worth the dep; rolling it by hand obscures more than it teaches. Note: PTB
   does *not* auto-split long messages - see "Long-message handling" below.

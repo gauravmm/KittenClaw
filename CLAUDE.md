@@ -20,8 +20,8 @@ is the primary requirement.
   control flow. Do not introduce dependency injection, plugin registries,
   base classes, decorators, etc. Plain functions and a dict of handlers is
   the ceiling.
-- **No tokenizer dependencies.** Cache and budget accounting reads
-  `response.usage` only.
+- **No tokenizer dependencies.** Budget accounting reads `response.usage`
+  only.
 - **Prefer editing existing files.** Do not create new `.py` files unless
   the spec demands it.
 - **Comments should explain *why*.** Don't paraphrase the code. Especially
@@ -42,9 +42,6 @@ is the primary requirement.
   is loaded by the model calling `file_read("skills/<name>.md")`. Do not
   inline the body into the prompt - it would blow up the prefix and
   invalidate the cache.
-- **`extra_body={"usage": {"include": True}}`** on every model call. This
-  is what makes OpenRouter expand the usage block so cache telemetry works
-  there. Removing it silently kills the `cached=` numbers.
 - **Path safety is via `_safe_path` in `tools.py`.** Both the workspace-
   containment check *and* the dotfile filter. Used in every file tool *and*
   the skill loader. Do not write a second version.

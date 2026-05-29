@@ -6,7 +6,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "kittenclaw",
-      "args": ["--preset", "nemotron"],
+      "args": ["--preset", "cerebras"],
       "console": "integratedTerminal",
       "justMyCode": false,
       "cwd": "${workspaceFolder}"

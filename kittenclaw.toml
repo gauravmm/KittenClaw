@@ -1,5 +1,5 @@
 # Which preset to use if --preset isn't passed on the CLI.
-default_preset = "openrouter-free"
+default_preset = "cerebras"
 
 # Default. OpenRouter's catch-all `openrouter/free` router picks a free model
 # at random and filters for tool-calling support per request. Free signup at
@@ -17,6 +17,29 @@ model = "nvidia/nemotron-3-super-120b-a12b:free"
 max_context_tokens = 24000
 max_response_tokens = 4096
 api_key = "${OPENROUTER_API_KEY}"
+
+# Groq's free tier: ~14,400 requests/day, fast. The high request ceiling
+# suits the agentic loop (one user turn = several model calls). Free signup
+# at console.groq.com; no card. gpt-oss-120b is used over Llama 3.3 70B
+# because the Llama tool-calling path on Groq intermittently 400s with
+# `tool_use_failed` (malformed function syntax).
+[models.groq]
+base_url = "https://api.groq.com/openai/v1"
+model = "openai/gpt-oss-120b"
+max_context_tokens = 24000
+max_response_tokens = 4096
+api_key = "${GROQ_API_KEY}"
+
+# Cerebras free tier: 1M tokens/day with an 8K context cap - the small cap
+# fits short-context teaching sessions. Free signup at cloud.cerebras.ai; no
+# card. gpt-oss-120b is the current free model (their Llama models moved to
+# paid). Like Groq, no cached_tokens telemetry.
+[models.cerebras]
+base_url = "https://api.cerebras.ai/v1"
+model = "gpt-oss-120b"
+max_context_tokens = 8000
+max_response_tokens = 2048
+api_key = "${CEREBRAS_API_KEY}"
 
 [models.local-vllm]
 base_url = "http://localhost:8000/v1"
