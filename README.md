@@ -1,4 +1,4 @@
-# kittenclaw
+# <img src="kittenclaw.webp" alt="" height="40" valign="middle"> kittenclaw
 
 A minimal chat harness for teaching agentic loops. Fork it, point it at a
 model you like, edit `system.md.j2`, drop new files into `workspace/skills/`,
@@ -49,29 +49,35 @@ You'll need [`uv`](https://github.com/astral-sh/uv) installed. uv picks up
 ## CLI
 
 ```text
-kittenclaw [--preset <name>] [--verbose]
+kittenclaw [--preset <name>] [--verbose] [--once "MESSAGE"]
 ```
 
 - `--preset <name>` - pick a preset from `kittenclaw.toml`. Defaults to
-  `default_preset` (currently `openrouter-free`).
+  `default_preset` (currently `cerebras`).
 - `--verbose` - emit per-tool-call debug logging on top of the default
-  one-line-per-turn cache telemetry.
+  one-line-per-turn token summary.
+- `--once "MESSAGE"` - process a single message locally and exit, with no
+  Telegram token and no polling. The turn runs through the same `turn_loop`
+  the bot uses and the reply is printed to stdout. Repeated calls reuse one
+  debug conversation (`conversations/0-*.jsonl`), so you can hold a
+  multi-turn exchange one message at a time; delete that file to start over.
+  Handy for trying the bot without a Telegram setup, or for debugging.
 
 Everything else (`base_url`, `model`, token budgets, API key) comes from
 the selected preset.
 
 ## What you'll see in the logs
 
-After every model call, one line:
+After every model call, one line with the provider's reported token counts:
 
 ```
-[chat 12345] turn 4  prompt=2843 (cached=2611, 91.8%)  completion=72  total=2915
+[chat 12345] turn 4  prompt=2843  completion=72  total=2915
 ```
 
-Watch the `cached=` field grow as a conversation goes on - that's prefix
-caching actually working. `cached=?` means the provider didn't report
-cached_tokens at all (e.g., Anthropic via OpenRouter - see [SPEC.md](SPEC.md)
-for why). `cached=0` means they reported it and it was zero.
+`prompt` is what feeds the auto-clear check (when the next turn would no
+longer fit `max_context_tokens`, the conversation is archived). The harness
+keeps the prompt prefix cache-friendly by construction, but measuring cache
+hit rates is taught separately and not reported here.
 
 ## Files & directories
 

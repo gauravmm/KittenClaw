@@ -18,22 +18,10 @@ max_context_tokens = 24000
 max_response_tokens = 4096
 api_key = "${OPENROUTER_API_KEY}"
 
-# Groq's free tier: ~14,400 requests/day, fast. The high request ceiling
-# suits the agentic loop (one user turn = several model calls). Free signup
-# at console.groq.com; no card. gpt-oss-120b is used over Llama 3.3 70B
-# because the Llama tool-calling path on Groq intermittently 400s with
-# `tool_use_failed` (malformed function syntax).
-[models.groq]
-base_url = "https://api.groq.com/openai/v1"
-model = "openai/gpt-oss-120b"
-max_context_tokens = 24000
-max_response_tokens = 4096
-api_key = "${GROQ_API_KEY}"
-
 # Cerebras free tier: 1M tokens/day with an 8K context cap - the small cap
 # fits short-context teaching sessions. Free signup at cloud.cerebras.ai; no
 # card. gpt-oss-120b is the current free model (their Llama models moved to
-# paid). Like Groq, no cached_tokens telemetry.
+# paid). No cached_tokens telemetry.
 [models.cerebras]
 base_url = "https://api.cerebras.ai/v1"
 model = "gpt-oss-120b"

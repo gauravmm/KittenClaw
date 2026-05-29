@@ -84,6 +84,12 @@ that's the signal it does *not* belong here.
 
 - `uv run python -m kittenclaw` launches the bot. Don't run this yourself
   unattended - it requires a Telegram bot token and will start polling.
+- `uv run python -m kittenclaw --once "your message"` *is* safe to run: it
+  drives one turn through `turn_loop` and exits, no Telegram token, no
+  polling. It reuses a fixed debug `chat_id` (0), so successive `--once`
+  calls continue the same `conversations/0-*.jsonl` thread - delete that
+  file to start fresh. Use it to reproduce and debug what the bot does
+  yourself. It does still call the model (consumes API quota).
 - `uv sync` is safe to run.
 - Conversation files under `conversations/*.jsonl` are runtime artifacts.
   Do not commit them; the `.gitignore` already excludes them.
