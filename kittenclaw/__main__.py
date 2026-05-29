@@ -397,6 +397,11 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         stream=sys.stderr,
     )
+    # httpx logs one INFO line per request ("HTTP Request: POST ... 200 OK").
+    # Every model call and web_fetch goes through it, which drowns out our
+    # one-line-per-turn cache telemetry. Mute it to WARNING; --verbose can't
+    # bring it back, which is the point.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     preset = load_config(args.preset)
     log.info(

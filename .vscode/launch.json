@@ -6,6 +6,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "kittenclaw",
+      "args": ["--preset", "nemotron"],
       "console": "integratedTerminal",
       "justMyCode": false,
       "cwd": "${workspaceFolder}"
