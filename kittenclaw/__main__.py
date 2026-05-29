@@ -95,12 +95,13 @@ def load_config(preset_name: str | None = None) -> dict:
     raw = tomllib.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     cfg = _interpolate(raw)
     name = preset_name or cfg["default_preset"]
-    if name not in cfg.get("models", {}):
+    models = cfg.get("models", {})
+    if name not in models:
         raise SystemExit(
             f"preset {name!r} not found in kittenclaw.toml - "
-            f"available: {list(cfg.get('models', {}))}"
+            f"available: {list(models)}"
         )
-    preset = dict(cfg["models"][name])
+    preset = dict(models[name])
     preset["_name"] = name
     return preset
 
