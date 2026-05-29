@@ -8,6 +8,10 @@ kittenclaw_orig.png
 conversations/*.jsonl
 conversations/archive/*.jsonl
 
+# Runtime model notes (written by the memory tools at chat time)
+workspace/memory/*
+!workspace/memory/.gitkeep
+
 
 # Python bytecode
 __pycache__/
