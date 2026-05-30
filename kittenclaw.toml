@@ -1,49 +1,39 @@
 # Which preset to use if --preset isn't passed on the CLI.
-default_preset = "cerebras"
+default_preset = "opencode"
 
-# Default. OpenRouter's catch-all `openrouter/free` router picks a free model
+# OpenCode Zen: curated free models behind an OpenAI-compatible endpoint at
+# opencode.ai/zen. Free signup gives the key (OPENCODE_API_KEY); each student
+# uses their own account. deepseek-v4-flash-free tool-calls reliably and runs
+# the full skill -> memory -> web_fetch pathway in testing. Caveat: the free
+# models are a "limited time" promo and may use prompts for training, so do not
+# send confidential data through them.
+[models.opencode]
+base_url = "https://opencode.ai/zen/v1"
+model = "deepseek-v4-flash-free"
+max_context_tokens = 24000
+max_response_tokens = 4096
+api_key = "${OPENCODE_API_KEY}"
+
+# Google AI Studio via its OpenAI-compatible endpoint. Free signup at
+# aistudio.google.com gives the key (GEMINI_API_KEY); no card, and the free
+# tier does not expire. gemini-3.1-flash-lite tool-calls cleanly and fast
+# through the compat endpoint. Free tier is ~500 requests/day per account, so
+# each student signs up their own. (gemma-4-31b-it has a higher 1.5k/day limit
+# but leaks <thought> tags into message.content via this endpoint, so we pin
+# Flash-Lite instead.)
+[models.gemini]
+base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+model = "gemini-3.1-flash-lite"
+max_context_tokens = 24000
+max_response_tokens = 4096
+api_key = "${GEMINI_API_KEY}"
+
+# OpenRouter's catch-all `openrouter/free` router picks a free model
 # at random and filters for tool-calling support per request. Free signup at
 # openrouter.ai gives the key; no model pinning needed.
-[models.openrouter-free]
+[models.openrouter]
 base_url = "https://openrouter.ai/api/v1"
 model = "openrouter/free"
 max_context_tokens = 24000
 max_response_tokens = 4096
 api_key = "${OPENROUTER_API_KEY}"
-
-[models.nemotron]
-base_url = "https://openrouter.ai/api/v1"
-model = "nvidia/nemotron-3-super-120b-a12b:free"
-max_context_tokens = 24000
-max_response_tokens = 4096
-api_key = "${OPENROUTER_API_KEY}"
-
-# Cerebras free tier: 1M tokens/day with an 8K context cap - the small cap
-# fits short-context teaching sessions. Free signup at cloud.cerebras.ai; no
-# card. gpt-oss-120b is the current free model (their Llama models moved to
-# paid). No cached_tokens telemetry.
-[models.cerebras]
-base_url = "https://api.cerebras.ai/v1"
-model = "gpt-oss-120b"
-max_context_tokens = 8000
-max_response_tokens = 2048
-api_key = "${CEREBRAS_API_KEY}"
-
-# NVIDIA NIM: OpenAI-compatible endpoint at integrate.api.nvidia.com. Free
-# signup at build.nvidia.com gives the key (NVIDIA_API_KEY). Nemotron is a
-# reasoning model - it streams its thinking into `reasoning_content` but still
-# returns the final answer in `message.content`, which is all this harness
-# reads, so no extra_body knobs are needed here.
-[models.nvidia-nim]
-base_url = "https://integrate.api.nvidia.com/v1"
-model = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
-max_context_tokens = 24000
-max_response_tokens = 4096
-api_key = "${NVIDIA_API_KEY}"
-
-[models.local-vllm]
-base_url = "http://localhost:8000/v1"
-model = "Qwen/Qwen2.5-7B-Instruct"
-max_context_tokens = 24000
-max_response_tokens = 2048
-api_key = "not-needed"

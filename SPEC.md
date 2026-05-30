@@ -527,6 +527,50 @@ lines for the providers they want to use. Only the API keys for presets the
 student actually selects need to be populated - `${VAR}` interpolation only
 runs on the selected preset.
 
+### Providers we evaluated
+
+The harness only needs an OpenAI-compatible `/v1/chat/completions` endpoint
+with **reliable native tool-calling** - which turns out to be the hard part.
+What we tried for the free/cheap teaching tier, and where each fell down:
+
+- **OpenCode Zen free** (`deepseek-v4-flash-free`): reliable native tool-calls,
+  runs the full skill -> memory -> web_fetch pathway, clean cited answers,
+  ~12s. Caveats: the free models are a "limited time" promo with undocumented
+  rate limits and may train on prompts (do not send confidential data). Current
+  default (`opencode`); one free account per student.
+- **Google AI Studio** (`gemini-3.1-flash-lite`): clean, fast (~7-13s),
+  reliable tool-calls through the OpenAI-compat endpoint. Free tier is ~500
+  requests/day per account (enough for a session). `gemma-4-31b-it` has a
+  higher ~1500/day limit but leaks `<thought>` reasoning tags into
+  `message.content` through that endpoint, so we pin Flash-Lite. Kept as the
+  `gemini` preset.
+- **OpenRouter free** (tested with `nvidia/nemotron-3-super-120b-a12b:free`):
+  tool-calling 100% reliable, but slow on the free tier (30-75s/turn) and
+  capped at 200 requests/day per account (1000 after a one-time $10 top-up) -
+  tight for a class. Kept as the `openrouter` preset (catch-all free router).
+- **Groq** (`gpt-oss-120b`): its tool-call path returned HTTP 400, so the
+  harness never received usable `tool_calls`. Dropped.
+- **Cerebras** (`gpt-oss-120b`): correct tool-calls and very fast (~6s), but
+  the free tier rate-limits hard on the multi-call bursts a tool-loop creates -
+  a second conversation seconds later gets a 429. With no retry wrapper that
+  surfaces as a broken turn. 8k context. Dropped.
+- **NVIDIA NIM** (`integrate.api.nvidia.com`): assorted tool-calling failures
+  across free models - `llama-4-maverick` emitted tool calls as plain text
+  instead of native `tool_calls` (harness-incompatible); `mistral-nemotron`
+  intermittently leaked raw `[TOOL_CALLS]` syntax and malformed tool names;
+  `glm-5.1` returned gateway 504s; `nemotron-mini-4b` has only a 4k context
+  (the response reservation alone overflows it). Too flaky. Dropped.
+- **Local vLLM, Gemma 4 E4B**: native tool-calls work and there are no rate
+  limits, but a ~4B phone-grade model is a weak agent - it does not proactively
+  load the weather skill, and even when told to it completes the multi-step
+  chain only ~1/3 of the time (it reads the skill, then stalls and asks the
+  user). Larger local models (Qwen3-VL-30B, Qwen3.5-9B) ran out of GPU memory.
+
+The recurring lesson for students: an OpenAI-compatible URL is necessary but
+not sufficient. Native tool-calling support, its reliability under multi-call
+loops, and free-tier rate limits are what actually decide whether a model works
+in this harness.
+
 ## Implementation language and packaging
 
 - **Language**: **Python 3.14** (the current latest stable, released October

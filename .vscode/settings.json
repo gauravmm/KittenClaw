@@ -1,6 +1,7 @@
 {
   "cSpell.words": [
     "agentic",
+    "aistudio",
     "anotiawang",
     "Anson",
     "asyncio",
@@ -8,9 +9,12 @@
     "beautifulsoup",
     "cerebras",
     "cwebp",
+    "deepseek",
     "dotenv",
     "endfor",
     "frontmatter",
+    "gemini",
+    "gemma",
     "geolocates",
     "httpx",
     "jsoncrack",
@@ -21,6 +25,7 @@
     "lehoanganh",
     "nemotron",
     "ngrok",
+    "opencode",
     "Pydantic",
     "pyproject",
     "pyyaml",

@@ -2,11 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run kittenclaw",
+      "name": "Run kittenclaw (opencode)",
       "type": "debugpy",
       "request": "launch",
       "module": "kittenclaw",
-      "args": ["--preset", "nvidia-nim"],
+      "args": ["--preset", "opencode"],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Run kittenclaw (gemini)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "kittenclaw",
+      "args": ["--preset", "gemini"],
       "console": "integratedTerminal",
       "justMyCode": false,
       "cwd": "${workspaceFolder}"
