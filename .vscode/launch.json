@@ -6,7 +6,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "kittenclaw",
-      "args": ["--preset", "cerebras"],
+      "args": ["--preset", "nvidia-nim"],
       "console": "integratedTerminal",
       "justMyCode": false,
       "cwd": "${workspaceFolder}"
