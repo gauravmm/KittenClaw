@@ -32,6 +32,22 @@
       ],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Run kittenclaw (openrouter)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "kittenclaw",
+        "--preset",
+        "openrouter"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

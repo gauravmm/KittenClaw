@@ -49,19 +49,23 @@ You'll need [`uv`](https://github.com/astral-sh/uv) installed. uv picks up
 ## CLI
 
 ```text
-kittenclaw [--preset <name>] [--verbose] [--once "MESSAGE"]
+kittenclaw [--preset <name>] [--verbose] [--once "MESSAGE"] [--chat <id>]
 ```
 
-- `--preset <name>` - pick a preset from `kittenclaw.toml`. Defaults to
-  `default_preset` (currently `cerebras`).
-- `--verbose` - emit per-tool-call debug logging on top of the default
++ `--preset <name>` - pick a preset from `kittenclaw.toml`. Defaults to
+  `default_preset` (currently `opencode`).
++ `--verbose` - emit per-tool-call debug logging on top of the default
   one-line-per-turn token summary.
-- `--once "MESSAGE"` - process a single message locally and exit, with no
++ `--once "MESSAGE"` - process a single message locally and exit, with no
   Telegram token and no polling. The turn runs through the same `turn_loop`
   the bot uses and the reply is printed to stdout. Repeated calls reuse one
   debug conversation (`conversations/0-*.jsonl`), so you can hold a
   multi-turn exchange one message at a time; delete that file to start over.
   Handy for trying the bot without a Telegram setup, or for debugging.
++ `--chat <id>` - conversation id for `--once` (default `0`). Different
+  values keep separate, independently resumable threads
+  (`conversations/<id>-*.jsonl`); reuse one to continue it. No effect
+  without `--once`.
 
 Everything else (`base_url`, `model`, token budgets, API key) comes from
 the selected preset.
@@ -93,9 +97,9 @@ hit rates is taught separately and not reported here.
 
 ## Commands
 
-- `/clear` - archive the current conversation; the next message starts
++ `/clear` - archive the current conversation; the next message starts
   fresh with a re-rendered system prompt.
-- `/disclaimer` - re-show the welcome message.
++ `/disclaimer` - re-show the welcome message.
 
 ## Reading conversation files
 
@@ -110,19 +114,19 @@ cat conversations/<chat_id>-<serial>.jsonl | jq -s
 
 Things students can do without touching code:
 
-- Edit `system.md.j2`, send a message, watch the behavior shift.
-- Add a file to `workspace/skills/` (with frontmatter); start a new
++ Edit `system.md.j2`, send a message, watch the behavior shift.
++ Add a file to `workspace/skills/` (with frontmatter); start a new
   conversation (`/clear` first); see the model discover and read it.
-- Add a model preset to `kittenclaw.toml`; rerun with `--preset <name>`.
-- `cat` a `.jsonl` to see the exact wire history; trace why the model did
++ Add a model preset to `kittenclaw.toml`; rerun with `--preset <name>`.
++ `cat` a `.jsonl` to see the exact wire history; trace why the model did
   what it did.
-- Watch the cache-hit ratio in the terminal log.
++ Watch the cache-hit ratio in the terminal log.
 
 Things that need code (and are kept short on purpose):
 
-- A new tool - add a function + schema to `kittenclaw/tools.py`, wire it
++ A new tool - add a function + schema to `kittenclaw/tools.py`, wire it
   into `_HANDLERS`.
-- A new command - add a `CommandHandler` in `kittenclaw/telegram_bot.py`.
++ A new command - add a `CommandHandler` in `kittenclaw/telegram_bot.py`.
 
 ## License
 

@@ -403,6 +403,13 @@ def main() -> None:
         metavar="MESSAGE",
         help="process one message locally and exit, no Telegram (for debugging)",
     )
+    parser.add_argument(
+        "--chat",
+        type=int,
+        default=0,
+        help="conversation id for --once (default 0). Use different values to keep "
+        "separate threads; reuse one to continue it.",
+    )
     args = parser.parse_args()
 
     load_dotenv(ROOT / ".env")
@@ -431,7 +438,7 @@ def main() -> None:
     # rendered reply goes to stdout while logging stays on stderr.
     if args.once is not None:
         client = make_client(preset)
-        chat_id = 0  # debug chat; delete conversations/0-*.jsonl to start over
+        chat_id = args.chat  # default 0; --chat N gives an independent thread
         path = active_conversation_path(chat_id) or new_conversation(chat_id)
         reply, cleared = asyncio.run(
             turn_loop(
