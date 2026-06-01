@@ -36,7 +36,17 @@ DISCLAIMER = (
     "moderation, and no guarantees - assume anything I say can be wrong.\n\n"
     "Commands:\n"
     "/clear - archive this conversation and start fresh\n"
-    "/disclaimer - re-show this message"
+    "/disclaimer - re-show this message\n"
+    "/about - what this bot is, and where the code lives"
+)
+
+# Inline like DISCLAIMER, for the same reason. Plain text (not markdown) so
+# the URL is sent verbatim - no MarkdownV2 escaping to get wrong.
+ABOUT = (
+    "kittenclaw is a tiny teaching bot: a minimal agentic chat loop you can "
+    "read in one sitting. It shows how a model drives tool calls (reading and "
+    "writing files, fetching web pages) turn by turn.\n\n"
+    "Source, spec, and docs: https://github.com/gauravmm/KittenClaw/"
 )
 
 # Telegram's per-message limit is 4096 chars. Leave headroom for markdown
@@ -102,6 +112,13 @@ async def _reply(update: Update, text: str) -> None:
 async def on_disclaimer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/disclaimer - re-show the welcome message. Does not alter state."""
     await _send_disclaimer(update)
+
+
+async def on_about(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/about - introduce the bot and link to the source repo. No state change."""
+    chat = update.effective_chat
+    assert chat is not None
+    await chat.send_message(ABOUT)
 
 
 async def on_clear(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -180,6 +197,7 @@ async def _set_commands(app: Application) -> None:
         [
             ("clear", "Archive this conversation and start fresh"),
             ("disclaimer", "Re-show the welcome message"),
+            ("about", "What this bot is, and where the code lives"),
         ]
     )
 
@@ -198,6 +216,7 @@ def run_bot(token: str, preset: dict) -> None:
 
     app.add_handler(CommandHandler("clear", on_clear))
     app.add_handler(CommandHandler("disclaimer", on_disclaimer))
+    app.add_handler(CommandHandler("about", on_about))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
 
     log.info("kittenclaw is up. Long-polling Telegram...")
