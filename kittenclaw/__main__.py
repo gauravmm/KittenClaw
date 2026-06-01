@@ -77,6 +77,7 @@ def _interpolate(value: Any) -> Any:
     if isinstance(value, list):
         return [_interpolate(v) for v in value]
     if isinstance(value, str):
+
         def sub(m: re.Match[str]) -> str:
             name = m.group(1)
             v = os.environ.get(name)
@@ -85,6 +86,7 @@ def _interpolate(value: Any) -> Any:
                     f"kittenclaw.toml references ${{{name}}} but it's not set in .env"
                 )
             return v
+
         return _VAR_RE.sub(sub, value)
     return value
 
@@ -98,8 +100,7 @@ def load_config(preset_name: str | None = None) -> dict:
     models = cfg.get("models", {})
     if name not in models:
         raise SystemExit(
-            f"preset {name!r} not found in kittenclaw.toml - "
-            f"available: {list(models)}"
+            f"preset {name!r} not found in kittenclaw.toml - available: {list(models)}"
         )
     preset = dict(models[name])
     preset["_name"] = name
@@ -149,6 +150,14 @@ def load_skills() -> list[dict]:
     return skills
 
 
+def load_workspace_file(relpath: str) -> str | None:
+    """Return the contents of a workspace file by path, or None if absent/empty."""
+    path = tools._safe_path(relpath)
+    if not path.exists():
+        return None
+    return path.read_text(encoding="utf-8").strip() or None
+
+
 def render_system_prompt() -> str:
     """Render `system.md.j2` against the current skill frontmatter set.
 
@@ -161,7 +170,10 @@ def render_system_prompt() -> str:
         trim_blocks=True,
         lstrip_blocks=True,
     )
-    return tmpl.render(skills=load_skills())
+    # `load_workspace_file` is handed to the template so the *template* decides
+    # what to pull in (e.g. `{% set soul = load_workspace_file("SOUL.md") %}`).
+    # Returns None for a missing/empty file, so `{% if %}` guards stay simple.
+    return tmpl.render(skills=load_skills(), load_workspace_file=load_workspace_file)
 
 
 # ---------------------------------------------------------------------------
@@ -262,7 +274,11 @@ def _log_usage(chat_id: int, turn: int, usage: Any) -> int:
     tt = getattr(usage, "total_tokens", 0) or 0
     log.info(
         "[chat %s] turn %d  prompt=%d  completion=%d  total=%d",
-        chat_id, turn, pt, ct, tt,
+        chat_id,
+        turn,
+        pt,
+        ct,
+        tt,
     )
     return pt
 
@@ -346,7 +362,10 @@ async def turn_loop(
                 append_message(path, tool_msg)
                 log.debug(
                     "[chat %s] turn %d tool %s -> %d chars",
-                    chat_id, turn, tc.function.name, len(content),
+                    chat_id,
+                    turn,
+                    tc.function.name,
+                    len(content),
                 )
             continue
 
@@ -357,7 +376,10 @@ async def turn_loop(
         if prompt_tokens + max_response >= auto_clear_threshold:
             log.warning(
                 "[chat %s] auto-clear: prompt=%d + max_response=%d >= max_context=%d.",
-                chat_id, prompt_tokens, max_response, auto_clear_threshold,
+                chat_id,
+                prompt_tokens,
+                max_response,
+                auto_clear_threshold,
             )
             archive(path)
             return reply, True
@@ -372,9 +394,7 @@ async def turn_loop(
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="kittenclaw")
-    parser.add_argument(
-        "--preset", help="model preset name from kittenclaw.toml"
-    )
+    parser.add_argument("--preset", help="model preset name from kittenclaw.toml")
     parser.add_argument(
         "--verbose", action="store_true", help="per-tool-call debug logging"
     )
@@ -400,7 +420,9 @@ def main() -> None:
     preset = load_config(args.preset)
     log.info(
         "preset=%s model=%s base_url=%s",
-        preset["_name"], preset["model"], preset["base_url"],
+        preset["_name"],
+        preset["model"],
+        preset["base_url"],
     )
 
     # --once drives a single turn through the same turn_loop the bot uses,

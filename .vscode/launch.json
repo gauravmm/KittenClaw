@@ -3,24 +3,34 @@
   "configurations": [
     {
       "name": "Run kittenclaw (opencode)",
-      "type": "debugpy",
+      "type": "node",
       "request": "launch",
-      "python": "${command:uv.pythonPath}",
-      "module": "kittenclaw",
-      "args": ["--preset", "opencode"],
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "kittenclaw",
+        "--preset",
+        "opencode"
+      ],
       "console": "integratedTerminal",
-      "justMyCode": false,
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "Run kittenclaw (gemini)",
-      "type": "debugpy",
+      "type": "node",
       "request": "launch",
-      "python": "${command:uv.pythonPath}",
-      "module": "kittenclaw",
-      "args": ["--preset", "gemini"],
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "kittenclaw",
+        "--preset",
+        "gemini"
+      ],
       "console": "integratedTerminal",
-      "justMyCode": false,
       "cwd": "${workspaceFolder}"
     }
   ]
