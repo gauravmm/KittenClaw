@@ -2,7 +2,7 @@
   "name": "kittenclaw",
   "image": "mcr.microsoft.com/devcontainers/python:3.14",
   "features": {
-    "ghcr.io/astral-sh/uv:0.4.4": {}
+    "ghcr.io/devcontainers-contrib/features/uv:1": {}
   },
   "postCreateCommand": "uv sync && cp -n .env.example .env || true",
   "customizations": {
