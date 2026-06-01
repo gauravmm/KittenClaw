@@ -66,7 +66,7 @@ kittenclaw [--preset <name>] [--verbose] [--once "MESSAGE"]
 Everything else (`base_url`, `model`, token budgets, API key) comes from
 the selected preset.
 
-## What you'll see in the logs
+### What you'll see in the logs
 
 After every model call, one line with the provider's reported token counts:
 
@@ -90,7 +90,6 @@ hit rates is taught separately and not reported here.
 | `workspace/memory/*.md`    | conventional cross-conversation memory         |
 | `conversations/*.jsonl`    | active conversations (one per Telegram chat)   |
 | `conversations/archive/`   | archived conversations after `/clear`          |
-| `kittenclaw.webp`          | sticker sent on first contact                  |
 
 ## Commands
 
@@ -106,10 +105,6 @@ sent to the model. To see them as the model sees them:
 ```bash
 cat conversations/<chat_id>-<serial>.jsonl | jq -s
 ```
-
-The devcontainer pre-installs the
-[json-lines-viewer](https://marketplace.visualstudio.com/items?itemName=lehoanganh298.json-lines-viewer)
-VS Code extension; opening a `.jsonl` file gives you a foldable view.
 
 ## Teaching with kittenclaw
 
@@ -128,17 +123,6 @@ Things that need code (and are kept short on purpose):
 - A new tool - add a function + schema to `kittenclaw/tools.py`, wire it
   into `_HANDLERS`.
 - A new command - add a `CommandHandler` in `kittenclaw/telegram_bot.py`.
-
-## Updating the sticker
-
-If you change `kittenclaw_orig.png`, regenerate the `.webp` for Telegram:
-
-```bash
-cwebp -resize 512 0 -q 90 -alpha_q 100 -exact kittenclaw_orig.png -o kittenclaw.webp
-```
-
-`-alpha_q 100 -exact` keep the alpha channel lossless and preserve RGB in
-transparent areas.
 
 ## License
 
