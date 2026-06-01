@@ -11,7 +11,7 @@
         "ms-python.python",
         "ms-python.debugpy",
         "astral-sh.uv",
-        "lehoanganh298.json-lines-viewer",
+        "toiroakr.jsonl-editor",
         "DavidAnson.vscode-markdownlint"
       ],
       "settings": {
