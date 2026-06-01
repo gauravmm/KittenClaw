@@ -13,6 +13,7 @@ dependencies = [
     "jsonlines>=4.0",
     "pyyaml>=6.0",
     "beautifulsoup4>=4.12",
+    "telegramify-markdown>=1.1.5",
 ]
 
 [project.scripts]

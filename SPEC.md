@@ -186,17 +186,25 @@ affect *new* conversations only; existing ones keep their original prompt.
 This is by design: the prefix is literally the same bytes across every turn
 of a conversation, by construction.
 
-The template receives one variable: `skills`, a list of frontmatter dicts
+The template receives two things: `skills`, a list of frontmatter dicts
 (one per `workspace/skills/*.md` file), sorted by filename for stable
-output.
+output; and `load_workspace_file`, a function that returns the stripped
+contents of a workspace file by path (or `None` if absent/empty, resolved
+through the same `_safe_path` the file tools use). The template decides what
+to pull in - the default does `{% set soul = load_workspace_file("SOUL.md") %}`
+and injects it verbatim at the very top of the prompt, so the persona leads
+the cache prefix while `system.md.j2` itself holds the operational mechanics
+(file access, memory, skills).
 
 A minimal default `system.md.j2`:
 
 ```jinja
-You are a helpful assistant running inside kittenclaw, a teaching harness.
+{% set soul = load_workspace_file("SOUL.md") %}
+{% if soul %}
+{{ soul }}
 
-You have file access (scoped to `./workspace`) and web access. Prefer calling
-tools over guessing; cite any URL you fetch; ask before overwriting files.
+{% endif %}
+You have file access (scoped to `./workspace`) and web access.
 
 {% if skills %}
 ## Skills available
@@ -468,6 +476,7 @@ Repo-root paths, baked into the source. No flags, no settings:
 | `./kittenclaw.toml`        | this config file                      |
 | `./system.md.j2`           | system prompt template                |
 | `./workspace/`             | model's file sandbox                  |
+| `./workspace/SOUL.md`      | optional persona, injected at prompt top |
 | `./workspace/skills/`      | skill files                           |
 | `./workspace/memory/`      | conventional location for memory      |
 | `./conversations/`         | active conversation JSONLs            |

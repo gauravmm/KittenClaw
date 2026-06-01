@@ -12,7 +12,9 @@ import asyncio
 import logging
 from collections import defaultdict
 
+import telegramify_markdown
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -74,14 +76,22 @@ async def _send_disclaimer(update: Update) -> None:
 
 async def _reply(update: Update, text: str) -> None:
     """Send a possibly-long assistant reply to the user. Empty text becomes
-    the `(no content)` placeholder so the user knows the turn ended."""
+    the `(no content)` placeholder so the user knows the turn ended.
+
+    Cheap models reliably emit GitHub-flavored markdown but botch raw HTML or
+    hand-escaped MarkdownV2, so we let them write plain markdown and convert it
+    here: `telegramify_markdown.markdownify` maps it to Telegram's MarkdownV2
+    dialect and escapes the many characters MarkdownV2 treats as special (`.`,
+    `-`, `_`, `(`, ...). We convert the whole reply *before* chunking - slicing
+    raw markdown first could cut a code fence in half and unbalance it. Only
+    this assistant text is formatted; the static status messages stay plain."""
     chat = update.effective_chat
     assert chat is not None
     if not text.strip():
         await chat.send_message("(no content)")
         return
-    for part in _chunk(text):
-        await chat.send_message(part)
+    for part in _chunk(telegramify_markdown.markdownify(text)):
+        await chat.send_message(part, parse_mode=ParseMode.MARKDOWN_V2)
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +161,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await _reply(update, reply)
         if auto_cleared:
             await chat.send_message(
-                "⚠️ *Max context reached.* This conversation has been "
+                "⚠️ Max context reached. This conversation has been "
                 "auto-cleared. Your next message will start a fresh one."
             )
 

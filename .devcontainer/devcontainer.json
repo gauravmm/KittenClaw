@@ -2,14 +2,16 @@
   "name": "kittenclaw",
   "image": "mcr.microsoft.com/devcontainers/python:3.14",
   "features": {
-    "ghcr.io/astral-sh/uv:1": {}
+    "ghcr.io/devcontainers-extra/features/uv:1": {}
   },
   "postCreateCommand": "uv sync && cp -n .env.example .env || true",
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
-        "lehoanganh298.json-lines-viewer",
+        "ms-python.debugpy",
+        "astral-sh.uv",
+        "toiroakr.jsonl-editor",
         "DavidAnson.vscode-markdownlint"
       ],
       "settings": {
