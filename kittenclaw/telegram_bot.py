@@ -161,12 +161,14 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
             path = harness.new_conversation(chat.id)
 
         try:
-            reply, auto_cleared = await harness.turn_loop(
+            # Stream each assistant segment as it lands instead of batching.
+            auto_cleared = await harness.turn_loop(
                 client=client,
                 preset=preset,
                 chat_id=chat.id,
                 path=path,
                 user_text=msg.text,
+                send=lambda text: _reply(update, text),
             )
         except Exception:
             log.exception("[chat %s] turn loop failed", chat.id)
@@ -175,7 +177,6 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
             )
             return
 
-        await _reply(update, reply)
         if auto_cleared:
             await chat.send_message(
                 "⚠️ Max context reached. This conversation has been "

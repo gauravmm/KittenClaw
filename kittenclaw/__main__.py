@@ -37,7 +37,7 @@ import shutil
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 import jsonlines
 import yaml
@@ -316,16 +316,16 @@ async def turn_loop(
     chat_id: int,
     path: Path,
     user_text: str,
-) -> tuple[str, bool]:
+    send: Callable[[str], Awaitable[None]],
+) -> bool:
     """Run one Telegram-message → final-assistant-reply cycle.
 
     Reads the conversation file, appends the user message, calls the model
-    in a loop (executing tool calls as they come back) until the model
-    returns a final text reply, then writes everything in order.
+    in a loop (executing tool calls as they come back), writing everything in
+    order. Each assistant text segment is delivered through `send`.
 
-    Returns `(reply_text, auto_cleared)`. `auto_cleared=True` means the
-    response pushed us past `max_context_tokens` and the conversation file
-    has been archived - caller should warn the user.
+    Returns `auto_cleared`. `True` means the conversation is over - caller
+    should warn the user. The reply itself has already gone out via `send`.
     """
     messages = read_messages(path)
 
@@ -336,6 +336,7 @@ async def turn_loop(
     turn = 0
     auto_clear_threshold = preset["max_context_tokens"]
     max_response = preset["max_response_tokens"]
+    sent = False  # so a turn that emits zero text still gets an end-of-turn ping
 
     while True:
         turn += 1
@@ -354,6 +355,11 @@ async def turn_loop(
 
         # If the model called tools, run each and continue the loop.
         if m.tool_calls:
+            # Narration the model emitted before its tool calls - stream it now
+            # rather than discarding it.
+            if m.content and m.content.strip():
+                await send(m.content.strip())
+                sent = True
             for tc in m.tool_calls:
                 content = await tools.dispatch(
                     tc.function.name, tc.function.arguments or "{}"
@@ -376,6 +382,13 @@ async def turn_loop(
 
         # No tool calls → this is the final reply.
         reply = (m.content or "").strip()
+        if reply:
+            await send(reply)
+            sent = True
+        # Whole turn produced no text at all - send empty so the transport can
+        # show its `(no content)` placeholder instead of silence.
+        if not sent:
+            await send("")
 
         # Auto-clear check: would the *next* turn fit a full response?
         if prompt_tokens + max_response >= auto_clear_threshold:
@@ -387,9 +400,9 @@ async def turn_loop(
                 auto_clear_threshold,
             )
             archive(path)
-            return reply, True
+            return True
 
-        return reply, False
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -445,16 +458,22 @@ def main() -> None:
         client = make_client(preset)
         chat_id = args.chat  # default 0; --chat N gives an independent thread
         path = active_conversation_path(chat_id) or new_conversation(chat_id)
-        reply, cleared = asyncio.run(
+
+        async def emit(text: str) -> None:
+            print(text)
+
+        cleared = asyncio.run(
             turn_loop(
                 client=client,
                 preset=preset,
                 chat_id=chat_id,
                 path=path,
                 user_text=args.once,
+                send=emit,
             )
         )
-        print(reply + ("\n[auto-cleared]" if cleared else ""))
+        if cleared:
+            print("[auto-cleared]")
         return
 
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
